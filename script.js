@@ -31,16 +31,18 @@ const months = [
   "Dec",
 ];
 
-error.style.display = "none";
-
 let darkmode = false;
+
+input.addEventListener("click", () => {
+  error.style.display = "none";
+});
 
 submitbtn.addEventListener("click", () => {
   const gitusername = input.value.trim(); // Retrieve current input value
   if (gitusername !== "") {
     getUserData(gitusername);
   } else {
-    error.innerHTML = "Please enter your Username";
+    error.style.display = "block";
   }
 });
 
@@ -50,7 +52,7 @@ input.addEventListener("keydown", (e) => {
     if (gitusername !== "") {
       getUserData(gitusername);
     } else {
-      error.innerHTML = "Please enter your Username";
+      //error.style.display = "block";
     }
   }
 });
@@ -59,7 +61,7 @@ async function getUserData(gitusername) {
   try {
     const response = await fetch(`https://api.github.com/users/${gitusername}`);
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      //throw new Error("Network response was not ok");
     }
     const data = await response.json();
     console.log(data);
@@ -70,43 +72,51 @@ async function getUserData(gitusername) {
 }
 
 function updateProfile(data) {
-  avatar.src = data.avatar_url;
-  name.innerHTML = data.name;
-  bio.innerHTML = data.bio == null ? "This profile has no bio" : data.bio;
-  date.innerHTML = data.created_at;
-  username.innerText = `@${data.login}`;
-  username.href = `${data.html_url}`;
-  Repos.innerText = data.public_repos;
-  followers.innerText = data.followers;
-  following.innerText = data.following;
-  const datesegments = data.created_at.split("T").shift().split("-");
-  date.innerText = `Joined ${datesegments[2]} ${months[datesegments[1] - 1]} ${
-    datesegments[0]
-  }`;
+  if (data.message !== "Not Found") {
+    error.style.display = "none";
 
-  locationName.innerHTML =
-    data.location == null ? "Not Available" : data.location;
-  if (data.blog) {
-    websiteName.href = data.blog.startsWith("http")
-      ? data.blog
-      : "https://" + data.blog;
-    websiteName.innerText = data.blog;
+    // Render to UI
+    avatar.src = data.avatar_url;
+    name.innerHTML = data.name;
+    bio.innerHTML = data.bio == null ? "This profile has no bio" : data.bio;
+    date.innerHTML = data.created_at;
+    username.innerText = `@${data.login}`;
+    username.href = `${data.html_url}`;
+    Repos.innerText = data.public_repos;
+    followers.innerText = data.followers;
+    following.innerText = data.following;
+    const datesegments = data.created_at.split("T").shift().split("-");
+    date.innerText = `Joined ${datesegments[2]} ${
+      months[datesegments[1] - 1]
+    } ${datesegments[0]}`;
+
+    locationName.innerHTML =
+      data.location == null ? "Not Available" : data.location;
+    if (data.blog) {
+      websiteName.href = data.blog.startsWith("http")
+        ? data.blog
+        : "https://" + data.blog;
+      websiteName.innerText = data.blog;
+    } else {
+      websiteName.href = "#";
+      websiteName.innerText = "Not Available";
+    }
+
+    if (data.twitter_username) {
+      twitter.href = data.twitter_username.startsWith("http")
+        ? data.twitter_username
+        : "https://twitter.com/" + data.twitter_username;
+      twitter.innerText = data.twitter_username;
+    } else {
+      twitter.href = "#";
+      twitter.innerText = "Not Available";
+    }
+
+    company.innerHTML = data.company == null ? "Not Available" : data.company;
   } else {
-    websiteName.href = "#";
-    websiteName.innerText = "Not Available";
+    console.log("user not found");
+    error.style.display = "block";
   }
-
-  if (data.twitter_username) {
-    twitter.href = data.twitter_username.startsWith("http")
-      ? data.twitter_username
-      : "https://twitter.com/" + data.twitter_username;
-    twitter.innerText = data.twitter_username;
-  } else {
-    twitter.href = "#";
-    twitter.innerText = "Not Available";
-  }
-
-  company.innerHTML = data.company == null ? "Not Available" : data.company;
 }
 
 getUserData("ankitagrawal10");
@@ -125,14 +135,19 @@ function darkModeProperties() {
   document.body.style.color = "white";
   document.querySelector(".profile-container").style.backgroundColor =
     "#1E2A47";
+  document.querySelector(".form").style.backgroundColor = "#1E2A47";
   modetext.innerText = "LIGHT";
   modeicon.src = "./assets/images/sun-icon.svg";
   name.style.color = "white";
   username.style.color = "blue";
-  document.querySelector(".repos").style.backgroundColor = "black"
+  document.querySelector(".repos").style.backgroundColor = "black";
+  input.style.backgroundColor = "#1E2A47";
+  //input.placeholder.style.color = "white"
+  input.style.color = "white";
+  input.style.setProperty("--placeholder-color", "white");
   Repos.style.color = "white";
-  followers.style.color = "white"
-  following.style.color = "white"
+  followers.style.color = "white";
+  following.style.color = "white";
   darkmode = true;
   console.log("darkmode changed to " + darkmode);
   localStorage.setItem("darkmode", true);
@@ -146,6 +161,15 @@ function lightModeProperties() {
     "#FEFEFE";
   modetext.innerText = "DARK";
   modeicon.src = "./assets/images/moon-icon.svg";
+  input.style.backgroundColor = "white";
+  document.querySelector(".form").style.backgroundColor = "white";
+  document.querySelector(".repos").style.backgroundColor = "#f6f8ff";
+  input.style.color = "black";
+  input.style.setProperty("--placeholder-color", "#4b6a9b");
+  Repos.style.color = "black";
+  followers.style.color = "black";
+  following.style.color = "black";
+  name.style.color = "black";
   darkmode = false;
   console.log("darkmode changed to " + darkmode);
   localStorage.setItem("darkmode", false);
@@ -153,7 +177,7 @@ function lightModeProperties() {
 }
 
 function init() {
-  const darkmode = localStorage.getItem("darkmode") === "true";
+  const darkmode = localStorage.getItem("dark-mode") === "true";
 
   if (darkmode) {
     darkModeProperties();
@@ -163,6 +187,5 @@ function init() {
 }
 
 init();
-
 
 // init()
